@@ -19,14 +19,14 @@ CRATE_NAME := $(shell cargo metadata --no-deps --format-version 1 | jq -r '.pack
 KERNEL_OBJ := target/$(TARGET)/$(VERSION)/lib$(CRATE_NAME).a
 KERNEL_ELF := kernel.elf
 
-QEMU_FLAGS := -machine virt -cpu cortex-a57 -no-graphic -kernel $(KERNEL_ELF)
+QEMU_FLAGS := -machine virt -cpu cortex-a57 -nographic -kernel $(KERNEL_ELF)
 
 all: $(KERNEL_ELF)
 
 $(ASM_DIR)/%.o : $(ASM_DIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
-$(KERNEL_OBJ): $(KERNEL_RS)
+$(KERNEL_OBJ): $(RUST_SRC)
 	RUSTFLAGS="-C target-feature=-neon" cargo build --target $(TARGET)
 
 $(KERNEL_ELF): $(ASM_OBJS) $(KERNEL_OBJ) $(LINKER_SCRIPT)

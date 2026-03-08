@@ -1,5 +1,5 @@
 [package]
-name="stark-os"
+name="stark_os"
 version="1.0.0"
 authors=["Neel Patel"]
 edition="2024"

@@ -44,5 +44,5 @@ unhandled:
     bl unimplemented_sync
 sync_ret:
     restoreregs
-    dealloc_stack, 256
+    dealloc_stack 256
     eret

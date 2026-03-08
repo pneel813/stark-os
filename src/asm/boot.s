@@ -13,10 +13,10 @@ _start:
     mov sp, x30
     mov x0, #0x09000000 
     mov x1, #0x3600
-    movk x1, #16e, LSL #16
+    movk x1, #0x16e, LSL #16
     mov x2, #0xC200
     movk x2, #0x1, LSL #16
-    bl uart_init
+    bl init_uart
     bl configure_uart
     svc #0
     bl kmain
