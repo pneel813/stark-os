@@ -1,14 +1,16 @@
 #![no_main]
 #![no_std]
 
-mod uart;
 mod expections;
+mod gic;
+mod uart;
+mod utilities;
 
 use core::panic::PanicInfo;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn kmain() {
-    uart::print(b"Stark OS v1.0!\n");
+    uart::print(b"Hello, from Rust\n");
 }
 
 #[panic_handler]

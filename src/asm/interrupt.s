@@ -3,28 +3,32 @@
 .equ IS_SVC_MASK, 0x15
 .equ SVC_NR_MASK, 0xFFFF
 
+
+
 .section .text
 
 .global evt
 
-.balign 2048
+.balign 2048  
 evt:
-    .skip 0x200
+.skip 0x200 
 
 sync_trampoline:
     b sync_handler
-    .balign 0x80
+.balign 0x80
 
 irq_trampoline:
-    b .
-    .balign 0x80
+    b irq_handler
+.balign 0x80
 
-fig_trampoline:
+fiq_trampoline:
     b .
-    .balign 0x80
+.balign 0x80
+
 
 serror_trampoline:
     b .
+
 
 sync_handler:
     alloc_stack 256
@@ -46,3 +50,17 @@ sync_ret:
     restoreregs
     dealloc_stack 256
     eret
+
+
+irq_handler:
+    alloc_stack 256
+    saveregs
+    mrs x0, ICC_IAR1_EL1
+    bl do_irq
+    msr ICC_EOIR1_EL1, x0
+    restoreregs
+    dealloc_stack 256
+    eret
+
+
+

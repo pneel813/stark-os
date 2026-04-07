@@ -1,7 +1,9 @@
 use crate::uart;
+use core::arch::asm;
 
 #[derive(Clone, Copy, Debug)]
 #[repr(C)]
+
 pub struct Regs {
     x0: u64,
     x1: u64,
@@ -49,7 +51,6 @@ fn u32_to_str(mut num: u32, buf: &mut [u8; 10]) -> &[u8] {
         buf[i] = b'0' + (num % 10) as u8;
         num /= 10;
     }
-
     &buf[i..]
 }
 
@@ -63,22 +64,8 @@ pub extern "C" fn do_sync(_regs: *mut Regs, nr: u32) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn do_irq() {}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn do_fiq() -> ! {
-    loop {}
-}
-
-#[unsafe(no_mangle)]
-pub extern "C" fn do_serror() -> ! {
-    loop {}
-}
-
-#[unsafe(no_mangle)]
 pub extern "C" fn unimplemented_sync(exception_class: u32) {
     let kind;
-
     match exception_class {
         1 => kind = "Trapped WF",
         3 => kind = "Trapped MCR (coproc==0b1111). EC value 0b000000",
@@ -124,7 +111,32 @@ pub extern "C" fn unimplemented_sync(exception_class: u32) {
         61 => kind = "Profiling exception",
         _ => kind = "Unknown reason",
     }
-    uart::print(b"Unimplemented synchronous exception: ");
+    uart::print(b"Unimplemented exception: ");
     uart::print(kind.as_bytes());
     uart::print(b"\n");
+}
+
+#[unsafe(no_mangle)]
+pub fn do_irq(id: u32) -> u32 {
+    match id {
+        30 => {
+            uart::print(b"Timer interrupt!\n");
+            unsafe {
+                asm!(
+                    "mrs x0, CNTFRQ_EL0",
+                    "msr CNTP_TVAL_EL0, x0",
+                    "isb",
+                    options(nostack, nomem)
+                );
+            }
+        }
+        _ => {
+            let mut buf = [0u8; 10];
+            let id_str = u32_to_str(id, &mut buf);
+            uart::print(b"Unhandled IRQ: ");
+            uart::print(id_str);
+            uart::print(b"\n");
+        }
+    }
+    return id;
 }
