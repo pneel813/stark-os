@@ -7,7 +7,11 @@ const GICD_CTLR: usize = 0x000; //Distributor offset
 const GICD_CTLR_GRP1NS: u32 = 0b10; // enable non secure group 1 -> set bit1
 const GICD_CTLR_GRP1S: u32 = 0b100; // enable secure group 1 -> set bit2
 const GICD_CTLR_ARE_S: u32 = 0b10000; // set bit 4 - to set affinity based routing
-const GICD_ENABLE_GRPS: u32 = GICD_CTLR_GRP1S | 1; // enable secure groups from secure world
+const GICD_ISENABLER: usize = 0x100;
+const GICD_IPRIORITYR: usize = 0x400;
+const GICD_ICFR: usize = 0xC00;
+const GICD_IROUTER: usize = 0x6100;
+const GICD_IGROUPR: usize = 0x080;
 
 // -- GICR (Redistributor config)
 const GICR_WAKER: usize = 0x0014;
@@ -104,3 +108,74 @@ pub unsafe fn enable_grp1_ints() {
         );
     }
 }
+
+#[unsafe(no_mangle)]
+pub unsafe fn set_spi_priority(dist_base: usize, id: u32, prio: u8) {
+    unsafe {
+        let reg_index = id / 4;
+        let reg_offset = (reg_index * 4) as usize;
+        let byte_index_in_reg = id % 4;
+        let bit_shift = byte_index_in_reg * 8;
+        let prio_reg_addr = dist_base + GICD_IPRIORITYR + reg_offset;
+        let mut reg_val = read_reg(prio_reg_addr, 0);
+        let mask: u32 = !(0xFF << bit_shift);
+        reg_val &= mask;
+        reg_val |= (prio as u32) << bit_shift;
+        write_reg(prio_reg_addr, 0, reg_val);
+        asm!("dsb sy",options(nostack,nomem));
+
+
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe fn set_spi_trigger(dist_base: usize,id: u32) {
+   unsafe {
+       let reg_index = id / 16;
+       let reg_offset = (reg_index * 4) as usize;
+       let bit_shift = (id % 16) * 2;
+       let cfg_reg_addr = dist_base + GICD_ICFR + reg_offset;
+       let mut reg_val = read_reg(cfg_reg_addr, 0);
+       let mask: u32 = !(0b11 << bit_shift);
+       reg_val &= mask;
+       write_reg(cfg_reg_addr, 0, reg_val);
+       asm!("dsb sy",options(nostack,nomem));
+   } 
+}
+
+#[unsafe(no_mangle)]
+pub unsafe fn enable_spi(dist_base: usize, id: u32) {
+    unsafe {
+        let reg_index = id / 32;
+        let reg_offset = (reg_index * 4) as usize;
+        let enabler_reg_addr = dist_base + GICD_ISENABLER + reg_offset;
+        let bit_to_set = 1 << (id % 32);
+        write_reg(enabler_reg_addr, 0, bit_to_set);
+        asm!("dsb sy",options(nostack,nomem));
+    }   
+}
+
+#[unsafe(no_mangle)]
+pub unsafe fn set_spi_routing(dist_base: usize,id:u32,core_affinity:u64) {
+    unsafe {
+        let router_reg_addr = dist_base + GICD_IROUTER + (8 * id as usize);
+        let router_ptr = router_reg_addr as *mut u64;
+        core::ptr::write_volatile(router_ptr, core_affinity);
+        asm!("dsb sy",options(nostack,nomem));
+    }
+}
+
+
+#[unsafe(no_mangle)]
+pub unsafe fn set_spi_group(dist_base: usize, id: u32) {
+    unsafe {
+        let reg_index = id / 32;
+        let reg_offset = (reg_index * 4) as usize;
+        let group_reg_addr = dist_base + GICD_IGROUPR + reg_offset;
+        let bit_to_set = 1 << (id % 32);
+        write_reg(group_reg_addr, 0, bit_to_set);
+        asm!("dsb sy",options(nostack,nomem));
+    }   
+}
+
+

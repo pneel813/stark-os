@@ -1,5 +1,7 @@
 use crate::utilities::{clear_reg_bits, read_reg, set_reg_bits, write_reg};
 
+
+
 struct UartPl011 {
     base_addr: *mut u32,
     base_clock: u32,
@@ -8,15 +10,15 @@ struct UartPl011 {
     stop_bits: u8,
 }
 
-// Register Offsets (in 32-bit words, not bytes, matching your logic)
+// Register Offsets
 const DR_OFF: usize = 0x00;
-const FR_OFF: usize = 0x18; // 0x6
-const IBRD_OFF: usize = 0x24; // 0x9
-const FBRD_OFF: usize = 0x28; // 0xA
-const LCR_OFF: usize = 0x2c; // 0xB
-const CR_OFF: usize = 0x30; // 0xC
-const IMSC_OFF: usize = 0x38; // 0xE
-const DMACR_OFF: usize = 0x48; // 0x12
+const FR_OFF: usize = 0x18; 
+const IBRD_OFF: usize = 0x24; 
+const FBRD_OFF: usize = 0x28; 
+const LCR_OFF: usize = 0x2c; 
+const CR_OFF: usize = 0x30; 
+const IMSC_OFF: usize = 0x38; 
+const DMACR_OFF: usize = 0x48; 
 
 const FR_BUSY: u32 = 1 << 3;
 const LCR_FEN: u32 = 1 << 4;
