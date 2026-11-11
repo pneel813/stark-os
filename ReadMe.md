@@ -122,7 +122,7 @@ To debug boot vector initialization, register transitions, or exception handling
 - [x] ARM64 `_start` boot sequence & `.bss` clearing
 - [x] Memory-Mapped PL011 UART output driver
 - [x] ARM64 Exception Vector Table (`VBAR_EL1`) setup
-- [x] Basic Generic Interrupt Controller (GICv2) initialization
+- [x] Generic Interrupt Controller (GICv3)
 - [ ] MMU Translation Tables & Virtual Memory Paging (`TBR0_EL1` / `TBR1_EL1`)
 - [ ] Dynamic Heap Allocation (`alloc` crate implementation)
 - [ ] Multitasking & Cooperative Context Switching Engine
